@@ -1,0 +1,5 @@
+
+logs/odoo_logs/odoo_server.log
+.vscode
+es-data/*
+es-config/*

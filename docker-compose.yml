@@ -1,0 +1,83 @@
+services:
+
+    # redis:
+    #     image: redis:5.0.12
+    #     container_name: attendance_redis
+    #     volumes:
+    #       - ./redis_data:/data
+    #     environment:
+    #         - ALLOW_EMPTY_PASSWORD=true
+    #     expose:
+    #         - 6379
+    #     networks:
+            # - es-network
+        # command: ["redis-server", "--bind", "redis", "--port", "6379"]
+
+    # redis_insight:
+    #     image: redislabs/redisinsight:latest
+    #     container_name: redis_insight
+    #     restart: always
+    #     ports:
+    #     - 8001:8001
+    #     volumes:
+    #     - redis_insight_volume_data:/db
+    #     networks:
+    #         - es-network
+        # command: ["redis-server", "--bind", "redis", "--port", "6379"]
+
+    # redis-commander:
+    #     image: rediscommander/redis-commander
+    #     container_name: redis-commander
+    #     restart: always
+    #     ports:
+    #         - 8081:8081
+    #     environment:
+    #         - REDIS_HOSTS=local:redis:6379
+    #     networks:
+            # - es-network
+
+    elasticsearch:
+        container_name: es_elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+        ports:
+          - "9200:9200"
+        volumes:
+          - ./es-data:/usr/share/elasticsearch/data
+          # - ./es-config:/usr/share/elasticsearch/config
+        environment:
+          - discovery.type=single-node
+          - xpack.security.enabled=false
+        networks:
+          - es-network
+
+    kibana:
+        container_name: es_kibana
+        image: docker.elastic.co/kibana/kibana:7.15.0
+        ports:
+          - "5601:5601"
+        depends_on:
+          - elasticsearch
+        networks:
+          - es-network
+
+    filebeat:
+        container_name: es_filebeat
+        build:
+            context: ./filebeat
+        command: filebeat -e -strict.perms=false
+        volumes:
+            - ./logs:/src/logs
+        # depends_on:
+        #     - elasticsearch
+        #     - kibana
+        networks:
+          - es-network
+
+networks:
+    es-network:
+        # ipam:
+        #   config:
+        #     - subnet: 172.31.0.0/16
+# volumes:
+#     redis_insight_volume_data:
+#     redis_data:
